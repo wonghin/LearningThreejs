@@ -41,11 +41,11 @@ export default function Robot() {
       />
       <OrbitControls
         autoRotate
-        autoRotateSpeed={0.05}
-        enableZoom={false}
+        autoRotateSpeed={0}
+        enableZoom={true}
         makeDefault
-        minPolarAngle={Math.PI / 2}
-        maxPolarAngle={Math.PI / 2}
+        // minPolarAngle={Math.PI / 2}
+        // maxPolarAngle={Math.PI / 2}
       />
       <EffectComposer disableNormalPass>
         <Bloom luminanceThreshold={1} mipmapBlur />
