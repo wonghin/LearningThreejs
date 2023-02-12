@@ -11,8 +11,10 @@ import {
   Vector3,
   TorusKnotGeometry,
   BufferAttribute,
+  FrontSide,
 } from "three";
 import { MeshBVH } from "three-mesh-bvh";
+import { theme } from "../../themes/theme";
 import { Cube } from "./Cube";
 
 export const Slicing = () => {
@@ -23,6 +25,9 @@ export const Slicing = () => {
 
   const tempVector = new Vector3();
   const tempLine = new Line3();
+  const tempVector1 = new Vector3();
+  const tempVector2 = new Vector3();
+  const tempVector3 = new Vector3();
 
   const defaultArray = new Float32Array(9999);
   const defaultPlane = new Plane();
@@ -151,6 +156,26 @@ export const Slicing = () => {
               index++;
             }
 
+            if (count === 3) {
+              tempVector1.fromBufferAttribute(posAttr, index - 3);
+              tempVector2.fromBufferAttribute(posAttr, index - 2);
+              tempVector3.fromBufferAttribute(posAttr, index - 1);
+              // If the last point is a duplicate intersection
+              if (
+                tempVector3.equals(tempVector1) ||
+                tempVector3.equals(tempVector2)
+              ) {
+                count--;
+                index--;
+              } else if (tempVector1.equals(tempVector2)) {
+                // If the last point is not a duplicate intersection
+                // Set the penultimate point as a distinct point and delete the last point
+                posAttr.setXYZ(index - 2, tempVector3);
+                count--;
+                index--;
+              }
+            }
+
             // If we only intersected with one or three sides then just remove it. This could be handled
             // more gracefully.
             if (count !== 2) {
@@ -177,7 +202,7 @@ export const Slicing = () => {
           <lineBasicMaterial
             attach="material"
             // neon yellow
-            color={"#ccff15"}
+            color={theme.palette.primary.light}
             linewidth={1}
             linecap={"round"}
             linejoin={"round"}
@@ -219,14 +244,16 @@ export const Slicing = () => {
         shadows
         onCreated={(state) => (state.gl.localClippingEnabled = true)}
       >
-        {/* <TorusKnot constant={constant} />
-        <SlicingPlane constant={constant} transparent={transparent} /> */}
         <TorusKnotSlice constant={constant} />
+        {/* <TorusKnot constant={constant} /> */}
+        <SlicingPlane constant={constant} transparent={transparent} />
 
         {/* We also setup some controls, background color and lighing */}
         <OrbitControls />
         {/* <color attach="background" args={["lightblue"]} /> */}
-        <Environment preset="sunset" background blur={0.5} />
+        <color attach="background" args={["black"]} />
+
+        {/* <Environment preset="sunset" background blur={0.5} /> */}
         <Lights />
       </Canvas>
     </>

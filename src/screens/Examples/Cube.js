@@ -36,7 +36,10 @@ export const Cube = () => {
       <pointLight position={[-10, -10, -10]} />
       <Box position={[-1.2, 0, 0]} />
       <Box position={[1.2, 0, 0]} />
-      <Environment preset="forest" background blur={0.8} />
+      <Box position={[0, 1.2, 0]} />
+      <Box position={[0, -1.2, 0]} />
+      <color attach="background" args={["black"]} />
+      {/* <Environment preset="forest" background blur={0.8} /> */}
       <OrbitControls />
     </Canvas>
   );
