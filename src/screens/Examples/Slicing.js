@@ -17,9 +17,11 @@ import { MeshBVH } from "three-mesh-bvh";
 import { theme } from "../../themes/theme";
 import { Cube } from "./Cube";
 
-export const Slicing = () => {
-  const { constant, transparent } = useControls("plane", {
+export const Slicing = ({ bg, plane, slicing = true }) => {
+  // @ts-ignore
+  const { constant, transparent, ShowModel } = useControls(plane, {
     transparent: true,
+    ShowModel: true,
     constant: { value: 0, min: -1, max: 1, step: 0.01 },
   });
 
@@ -156,25 +158,25 @@ export const Slicing = () => {
               index++;
             }
 
-            if (count === 3) {
-              tempVector1.fromBufferAttribute(posAttr, index - 3);
-              tempVector2.fromBufferAttribute(posAttr, index - 2);
-              tempVector3.fromBufferAttribute(posAttr, index - 1);
-              // If the last point is a duplicate intersection
-              if (
-                tempVector3.equals(tempVector1) ||
-                tempVector3.equals(tempVector2)
-              ) {
-                count--;
-                index--;
-              } else if (tempVector1.equals(tempVector2)) {
-                // If the last point is not a duplicate intersection
-                // Set the penultimate point as a distinct point and delete the last point
-                posAttr.setXYZ(index - 2, tempVector3);
-                count--;
-                index--;
-              }
-            }
+            // if (count === 3) {
+            //   tempVector1.fromBufferAttribute(posAttr, index - 3);
+            //   tempVector2.fromBufferAttribute(posAttr, index - 2);
+            //   tempVector3.fromBufferAttribute(posAttr, index - 1);
+            //   // If the last point is a duplicate intersection
+            //   if (
+            //     tempVector3.equals(tempVector1) ||
+            //     tempVector3.equals(tempVector2)
+            //   ) {
+            //     count--;
+            //     index--;
+            //   } else if (tempVector1.equals(tempVector2)) {
+            //     // If the last point is not a duplicate intersection
+            //     // Set the penultimate point as a distinct point and delete the last point
+            //     posAttr.setXYZ(index - 2, tempVector3);
+            //     count--;
+            //     index--;
+            //   }
+            // }
 
             // If we only intersected with one or three sides then just remove it. This could be handled
             // more gracefully.
@@ -244,14 +246,18 @@ export const Slicing = () => {
         shadows
         onCreated={(state) => (state.gl.localClippingEnabled = true)}
       >
-        <TorusKnotSlice constant={constant} />
-        {/* <TorusKnot constant={constant} /> */}
-        <SlicingPlane constant={constant} transparent={transparent} />
+        {slicing && (
+          <>
+            <TorusKnotSlice constant={constant} />
+            <SlicingPlane constant={constant} transparent={transparent} />
+          </>
+        )}
+        {ShowModel && <TorusKnot constant={slicing ? constant : undefined} />}
 
         {/* We also setup some controls, background color and lighing */}
         <OrbitControls />
         {/* <color attach="background" args={["lightblue"]} /> */}
-        <color attach="background" args={["black"]} />
+        <color attach="background" args={[bg]} />
 
         {/* <Environment preset="sunset" background blur={0.5} /> */}
         <Lights />

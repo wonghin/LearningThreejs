@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.10.5",
+    "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.5",
+    "@mantine/core": "^5.10.4",
+    "@mantine/hooks": "^5.10.4",
     "@mui/material": "^5.11.8",
     "@pmndrs/branding": "0.0.8",
     "@react-three/drei": "9.48.4",
