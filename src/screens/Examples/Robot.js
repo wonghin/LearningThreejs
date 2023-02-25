@@ -64,7 +64,7 @@ Source: https://sketchfab.com/3d-models/s2wt-kamdo-industrial-divinities-f503b70
 Title: S2WT "Kamdo" (Industrial Divinities)
 */
 
-function Kamdo(props) {
+export function Kamdo(props) {
   const head = useRef();
   const stripe = useRef();
   const light = useRef();

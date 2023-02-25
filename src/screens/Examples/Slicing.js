@@ -1,8 +1,8 @@
 import { Environment, OrbitControls } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useLoader } from "@react-three/fiber";
 import { useControls } from "leva";
 import React, { useEffect, useMemo, useRef } from "react";
-import {
+import THREE, {
   BackSide,
   DoubleSide,
   DynamicDrawUsage,
@@ -12,17 +12,41 @@ import {
   TorusKnotGeometry,
   BufferAttribute,
   FrontSide,
+  BoxGeometry,
+  BufferGeometry,
+  Mesh,
+  MeshBasicMaterial,
 } from "three";
 import { MeshBVH } from "three-mesh-bvh";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { theme } from "../../themes/theme";
-import { Cube } from "./Cube";
+import { Box, Cube } from "./Cube";
+
+export function SlicingPlane({ constant, transparent }) {
+  return (
+    <mesh position={[0, 0, constant]}>
+      <planeBufferGeometry attach="geometry" args={[5, 5]} />
+
+      {/* Purpose: edit plane */}
+      <meshStandardMaterial
+        attach="material"
+        roughness={1}
+        metalness={0}
+        side={DoubleSide}
+        color={transparent ? "#f5f5f5" : "#212121"}
+        opacity={transparent ? 0.5 : 1}
+        transparent={transparent}
+      />
+    </mesh>
+  );
+}
 
 export const Slicing = ({ bg, plane, slicing = true }) => {
   // @ts-ignore
   const { constant, transparent, ShowModel } = useControls(plane, {
     transparent: true,
-    ShowModel: true,
-    constant: { value: 0, min: -1, max: 1, step: 0.01 },
+    ShowModel: false,
+    constant: { value: 0, min: -1, max: 1, step: 0.001 },
   });
 
   const tempVector = new Vector3();
@@ -35,26 +59,9 @@ export const Slicing = ({ bg, plane, slicing = true }) => {
   const defaultPlane = new Plane();
   defaultPlane.normal.set(0, 0, -1);
 
-  function SlicingPlane({ constant, transparent }) {
-    return (
-      <mesh position={[0, 0, constant]}>
-        <planeBufferGeometry attach="geometry" args={[5, 5]} />
-        <meshStandardMaterial
-          attach="material"
-          roughness={1}
-          metalness={0}
-          side={DoubleSide}
-          color={transparent ? "#f5f5f5" : "#212121"}
-          opacity={transparent ? 0.5 : 1}
-          transparent={transparent}
-        />
-      </mesh>
-    );
-  }
-
   function TorusKnot({ constant }) {
     const torusKnotSettings = useMemo(() => {
-      return [1, 0.2, 50, 50, 2, 3];
+      return [1, 0.2, 50, 50, 4, 3];
     }, []);
 
     const clippingPlane = useMemo(() => {
@@ -100,11 +107,14 @@ export const Slicing = ({ bg, plane, slicing = true }) => {
   function TorusKnotSlice({ constant }) {
     const lineSegRef = useRef();
     const geomRef = useRef();
+    const gltf = useLoader(GLTFLoader, "./testGLTF.gltf");
 
     const bvhMesh = useMemo(() => {
       // setup BVH Mesh
       // the number next to TorusKnotGeometry respond to the paramenter of the geometry
-      const geometry = new TorusKnotGeometry(1, 0.2, 50, 50, 2, 3);
+      const geometry = new TorusKnotGeometry(1, 0.2, 50, 50, 4, 3);
+      // const geometry = mesh;
+
       return new MeshBVH(geometry, { maxLeafTris: 3 });
     }, []);
 
@@ -112,14 +122,17 @@ export const Slicing = ({ bg, plane, slicing = true }) => {
       if (bvhMesh && geomRef.current && lineSegRef.current) {
         if (geomRef.current) {
           const geo = geomRef.current;
+          // @ts-ignore
           if (!geo.hasAttribute("position")) {
             const linePosAttr = new BufferAttribute(defaultArray, 3, false);
             linePosAttr.setUsage(DynamicDrawUsage);
+            // @ts-ignore
             geo.setAttribute("position", linePosAttr);
           }
         }
 
         let index = 0;
+        // @ts-ignore
         const posAttr = geomRef.current.attributes.position;
 
         defaultPlane.constant = constant;
@@ -187,6 +200,7 @@ export const Slicing = ({ bg, plane, slicing = true }) => {
         });
 
         // set the draw range to only the new segments and offset the lines so they don't intersect with the geometry
+        // @ts-ignore
         geomRef.current.setDrawRange(0, index);
         posAttr.needsUpdate = true;
       }
@@ -203,12 +217,10 @@ export const Slicing = ({ bg, plane, slicing = true }) => {
           <bufferGeometry ref={geomRef} attach="geometry" />
           <lineBasicMaterial
             attach="material"
-            // neon yellow
             color={theme.palette.primary.light}
             linewidth={1}
             linecap={"round"}
             linejoin={"round"}
-            // battle the xxx
             polygonOffset={true}
             polygonOffsetFactor={-1.0}
             polygonOffsetUnits={4.0}
@@ -252,11 +264,14 @@ export const Slicing = ({ bg, plane, slicing = true }) => {
             <SlicingPlane constant={constant} transparent={transparent} />
           </>
         )}
+
         {ShowModel && <TorusKnot constant={slicing ? constant : undefined} />}
 
         {/* We also setup some controls, background color and lighing */}
-        <OrbitControls />
-        {/* <color attach="background" args={["lightblue"]} /> */}
+        <OrbitControls
+          minPolarAngle={Math.PI / 2}
+          maxPolarAngle={Math.PI / 2}
+        />
         <color attach="background" args={[bg]} />
 
         {/* <Environment preset="sunset" background blur={0.5} /> */}
